@@ -4,3 +4,15 @@ server:
 spring:
   application:
     name: restaurant-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/restaurant_db
+    username: postgres
+    password: bruce
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true

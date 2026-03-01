@@ -3,3 +3,16 @@ server:
 spring:
   application:
     name: delivery service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/delivery_db
+    username: postgres
+    password: bruce
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+
