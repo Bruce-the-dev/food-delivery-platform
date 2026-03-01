@@ -1,4 +1,4 @@
-package com.fooddelivery.exception;
+package com.fooddelivery.deliveryservice.exception;
 
 public class UnauthorizedException extends RuntimeException {
     public UnauthorizedException(String message) {

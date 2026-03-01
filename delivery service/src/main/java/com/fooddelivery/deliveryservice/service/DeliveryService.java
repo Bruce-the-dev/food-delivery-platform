@@ -1,7 +1,7 @@
 package com.fooddelivery.deliveryservice.service;
 
 import com.fooddelivery.deliveryservice.dto.DeliveryResponse;
-import com.fooddelivery.exception.ResourceNotFoundException;
+import com.fooddelivery.deliveryservice.exception.ResourceNotFoundException;
 import com.fooddelivery.deliveryservice.model.Delivery;
 import com.fooddelivery.deliveryservice.model.Delivery.DeliveryStatus;
 import com.fooddelivery.deliveryservice.repository.DeliveryRepository;

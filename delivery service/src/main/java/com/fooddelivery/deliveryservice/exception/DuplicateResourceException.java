@@ -1,4 +1,4 @@
-package com.fooddelivery.exception;
+package com.fooddelivery.deliveryservice.exception;
 
 public class DuplicateResourceException extends RuntimeException {
     public DuplicateResourceException(String message) {
