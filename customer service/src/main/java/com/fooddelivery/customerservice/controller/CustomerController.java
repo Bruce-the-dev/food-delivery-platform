@@ -45,4 +45,13 @@ public class CustomerController {
         // Temporary: always update customer with ID 1
         return ResponseEntity.ok(customerService.updateProfileById(1L, request));
     }
+    @GetMapping("/by-username/{username}")
+    public CustomerResponse getByUsername(@PathVariable String username) {
+        return customerService.getProfile(username);
+    }
+    @PostMapping("/{id}/promote")
+    public ResponseEntity<Void> promoteToRestaurantOwner(@PathVariable Long id) {
+        customerService.promoteToRestaurantOwner(id);
+        return ResponseEntity.noContent().build();
+    }
 }

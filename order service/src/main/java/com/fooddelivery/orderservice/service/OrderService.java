@@ -3,65 +3,105 @@ package com.fooddelivery.orderservice.service;
 import com.fooddelivery.orderservice.dto.OrderItemRequest;
 import com.fooddelivery.orderservice.dto.OrderResponse;
 import com.fooddelivery.orderservice.dto.PlaceOrderRequest;
+import com.fooddelivery.orderservice.exception.ResourceNotFoundException;
 import com.fooddelivery.orderservice.model.Order;
 import com.fooddelivery.orderservice.model.OrderItem;
 import com.fooddelivery.orderservice.repository.OrderRepository;
+import com.fooddelivery.orderservice.service.client.CustomerClient;
+import com.fooddelivery.orderservice.service.client.DeliveryClient;
+import com.fooddelivery.orderservice.service.client.RestaurantClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
+
 
 @Service
 @RequiredArgsConstructor
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final CustomerClient customerClient;       // Feign client
+    private final RestaurantClient restaurantClient;   // Feign client
+    private final DeliveryClient deliveryClient;
+
 
 
     @Transactional
     public OrderResponse placeOrder(PlaceOrderRequest request) {
-        // Create Order entity
+
+        // ---- Fetch restaurant snapshot ----
+        RestaurantClient.RestaurantResponseDTO restaurantDTO = restaurantClient.getRestaurantById(request.getRestaurantId());
+        if (!restaurantDTO.isActive()) {
+            throw new IllegalStateException("Restaurant is not accepting orders");
+        }
+
+        // ---- Build order entity with IDs + snapshots ----
+        CustomerClient.CustomerResponseDto customer =
+                customerClient.getCustomerById(request.getCustomerId());
+
         Order order = Order.builder()
-                .customerId(request.getCustomerId())
+                .customerId(customer.getId())
+                .customerName(customer.getFirstName()+" "+ customer.getLastName())         // snapshot
                 .restaurantId(request.getRestaurantId())
+                .restaurantName(restaurantDTO.getName())        // snapshot
                 .deliveryAddress(request.getDeliveryAddress())
                 .specialInstructions(request.getSpecialInstructions())
-                .estimatedDeliveryTime(LocalDateTime.now().plusMinutes(30)) // placeholder
+                .status(Order.OrderStatus.PLACED)
+                .createdAt(LocalDateTime.now())
+                .estimatedDeliveryTime(LocalDateTime.now()
+                        .plusMinutes(restaurantDTO.getEstimatedDeliveryMinutes()))
+                .items(new ArrayList<>())
                 .build();
 
-        // Add items
+        // ---- Process order items ----
         BigDecimal total = BigDecimal.ZERO;
         for (OrderItemRequest itemReq : request.getItems()) {
-            BigDecimal subtotal = itemReq.getUnitPrice().multiply(BigDecimal.valueOf(itemReq.getQuantity()));
+            RestaurantClient.MenuItemResponseDTO menuItem =
+                    restaurantClient.getMenuItemByRestaurant(
+                            request.getRestaurantId(),
+                            itemReq.getMenuItemId()
+                    );
+            if (!menuItem.isAvailable()) {
+                throw new IllegalStateException("Menu item '" + menuItem.getName() + "' is not available");
+            }
+
+            BigDecimal subtotal = menuItem.getPrice().multiply(BigDecimal.valueOf(itemReq.getQuantity()));
 
             OrderItem orderItem = OrderItem.builder()
-                    .order(order)
-                    .menuItemId(itemReq.getMenuItemId())
-                    .menuItemName(itemReq.getMenuItemName())
-//                    .menuItemPrice(itemReq.getUnitPrice())
-                    .unitPrice(itemReq.getUnitPrice())
+                    .menuItemId(menuItem.getId())
+                    .itemName(menuItem.getName())
                     .quantity(itemReq.getQuantity())
+                    .unitPrice(menuItem.getPrice())
                     .subtotal(subtotal)
                     .specialInstructions(itemReq.getSpecialInstructions())
                     .build();
-
+orderItem.setOrder(order);
             order.getItems().add(orderItem);
             total = total.add(subtotal);
         }
 
         order.setTotalAmount(total);
-        Order saved = orderRepository.save(order);
 
-        return OrderResponse.fromEntity(saved);
+        // ---- Save order ----
+        Order savedOrder = orderRepository.save(order);
+        //calling delivery service
+        deliveryClient.assignDelivery(savedOrder.getId());
+
+        // ---- TODO: publish OrderPlacedEvent for Delivery Service ----
+
+        return OrderResponse.fromEntity(savedOrder);
     }
 
     @Transactional(readOnly = true)
-    public OrderResponse getOrderById(Long id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+    public OrderResponse getOrderById(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
         return OrderResponse.fromEntity(order);
     }
 
@@ -78,11 +118,38 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse updateOrderStatus(Long orderId, Order.OrderStatus status) {
+    public OrderResponse updateOrderStatus(Long orderId, String status) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
 
-        order.setStatus(status);
+        order.setStatus(Order.OrderStatus.valueOf(status.toUpperCase()));
         return OrderResponse.fromEntity(orderRepository.save(order));
+    }
+
+    @Transactional
+    public OrderResponse cancelOrder(Long orderId, Long customerId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+
+        if (!order.getCustomerId().equals(customerId)) {
+            throw new IllegalStateException("You can only cancel your own orders");
+        }
+
+        if (order.getStatus() != Order.OrderStatus.PLACED
+                && order.getStatus() != Order.OrderStatus.CONFIRMED) {
+            throw new IllegalStateException("Cannot cancel order in status: " + order.getStatus());
+        }
+
+        order.setStatus(Order.OrderStatus.CANCELLED);
+        // Publish DeliveryCancelledEvent instead of synchronous call
+        return OrderResponse.fromEntity(orderRepository.save(order));
+    }
+
+    @Transactional
+    public void updateStatus(Long orderId, String status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order", "id", orderId));
+
+        order.setStatus(Order.OrderStatus.valueOf(status.toUpperCase()));
     }
 }

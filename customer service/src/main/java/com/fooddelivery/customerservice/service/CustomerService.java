@@ -97,4 +97,14 @@ public class CustomerService {
 
         return CustomerResponse.fromEntity(customerRepository.save(customer));
     }
+    @Transactional
+    public void promoteToRestaurantOwner(Long id) {
+        Customer customer = customerRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer", "id", id));
+
+        if (customer.getRole() != Customer.Role.RESTAURANT_OWNER) {
+            customer.setRole(Customer.Role.RESTAURANT_OWNER);
+            customerRepository.save(customer);
+        }
+    }
 }

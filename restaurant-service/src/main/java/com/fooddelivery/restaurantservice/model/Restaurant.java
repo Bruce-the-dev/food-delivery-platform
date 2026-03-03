@@ -3,6 +3,8 @@ package com.fooddelivery.restaurantservice.model;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "restaurants")
@@ -36,9 +38,12 @@ public class Restaurant {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // ✅ Replace Customer entity with ID reference
+    // Replace Customer entity with ID reference
     @Column(nullable = false)
     private Long ownerId;
+
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MenuItem> menuItems = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

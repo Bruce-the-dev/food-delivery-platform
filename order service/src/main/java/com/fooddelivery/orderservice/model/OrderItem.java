@@ -37,9 +37,4 @@ public class OrderItem {
     @Column(nullable = false)
     private Long menuItemId;  // instead of MenuItem entity
 
-    @Column(nullable = false)
-    private String menuItemName;
-
-//    @Column(nullable = false)
-//    private BigDecimal menuItemPrice;
 }

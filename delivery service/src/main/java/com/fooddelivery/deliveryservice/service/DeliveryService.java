@@ -5,6 +5,7 @@ import com.fooddelivery.deliveryservice.exception.ResourceNotFoundException;
 import com.fooddelivery.deliveryservice.model.Delivery;
 import com.fooddelivery.deliveryservice.model.Delivery.DeliveryStatus;
 import com.fooddelivery.deliveryservice.repository.DeliveryRepository;
+import com.fooddelivery.deliveryservice.service.client.OrderClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class DeliveryService {
     private static final Logger log = LoggerFactory.getLogger(DeliveryService.class);
 
     private final DeliveryRepository deliveryRepository;
+    private final OrderClient  orderClient;
 
     // Simulated driver pool
     private static final String[] DRIVERS = {
@@ -91,6 +93,7 @@ public class DeliveryService {
             delivery.setPickedUpAt(LocalDateTime.now());
         } else if (newStatus == DeliveryStatus.DELIVERED) {
             delivery.setDeliveredAt(LocalDateTime.now());
+            orderClient.updateOrderStatus(delivery.getOrderId(), "DELIVERED");
         }
 
         log.info("Delivery #{} status changed to {}", deliveryId, newStatus);

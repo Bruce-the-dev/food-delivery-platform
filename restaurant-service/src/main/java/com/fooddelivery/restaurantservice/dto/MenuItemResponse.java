@@ -26,8 +26,8 @@ public class MenuItemResponse {
         dto.setCategory(m.getCategory());
         dto.setAvailable(m.isAvailable());
         dto.setImageUrl(m.getImageUrl());
-        dto.setRestaurantId(m.getRestaurantId());
-//        dto.setRestaurantName(m.getRestaurant().getName());
+        dto.setRestaurantId(m.getRestaurant().getId());
+        dto.setRestaurantName(m.getRestaurant().getName());
         return dto;
     }
 }

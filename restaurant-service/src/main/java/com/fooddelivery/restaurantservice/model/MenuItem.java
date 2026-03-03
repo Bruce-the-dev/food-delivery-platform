@@ -29,9 +29,9 @@ public class MenuItem {
 
     private String imageUrl;
 
-    // Still same-domain, but we can store restaurantId instead of entity
-    @Column(nullable = false)
-    private Long restaurantId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private Restaurant restaurant;
 
     @PrePersist
     protected void onCreate() {

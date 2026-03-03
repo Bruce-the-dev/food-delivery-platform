@@ -14,4 +14,5 @@ public class MenuItemRequest {
     @NotNull @Positive private BigDecimal price;
     private String category;
     private String imageUrl;
+    private String ownerUsername; // for now before adding auth
 }

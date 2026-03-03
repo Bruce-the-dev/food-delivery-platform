@@ -54,11 +54,12 @@ public class RestaurantController {
     }
 
     @PostMapping("/{restaurantId}/menu")
-    public ResponseEntity<MenuItem> addMenuItem(
+    public ResponseEntity<MenuItemResponse> addMenuItem(
             @PathVariable Long restaurantId,
+            @RequestParam String OwnerUsername ,
             @RequestBody MenuItemRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(restaurantService.addMenuItem(restaurantId, request));
+                .body(restaurantService.addMenuItem(restaurantId,OwnerUsername, request));
     }
 
     @GetMapping("/{restaurantId}/menu")
@@ -67,10 +68,11 @@ public class RestaurantController {
     }
 
     @PutMapping("/menu/{itemId}")
-    public ResponseEntity<MenuItem> updateMenuItem(
+    public ResponseEntity<MenuItemResponse> updateMenuItem(
             @PathVariable Long itemId,
+            @RequestParam String  OwnerUsername ,
             @RequestBody MenuItemRequest request) {
-        return ResponseEntity.ok(restaurantService.updateMenuItem(itemId, request));
+        return ResponseEntity.ok(restaurantService.updateMenuItem(itemId, OwnerUsername,request));
     }
 
     @PatchMapping("/menu/{itemId}/toggle")
@@ -78,5 +80,13 @@ public class RestaurantController {
         restaurantService.toggleMenuItemAvailability(itemId);
         return ResponseEntity.noContent().build();
     }
+    @GetMapping("/{restaurantId}/menu/{menuItemId}")
+    public ResponseEntity<MenuItemResponse> getMenuItemByRestaurant(
+            @PathVariable Long restaurantId,
+            @PathVariable Long menuItemId) {
 
+        return ResponseEntity.ok(
+                restaurantService.getMenuItemByRestaurant(restaurantId, menuItemId)
+        );
+    }
 }
