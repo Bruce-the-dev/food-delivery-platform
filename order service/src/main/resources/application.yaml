@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: order-service
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
 
   datasource:
     url: jdbc:postgresql://localhost:5432/order_db
@@ -12,7 +16,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     properties:
       hibernate:
         format_sql: true
@@ -22,7 +26,42 @@ spring:
     port: 5672
     username: guest
     password: guest
+    listener:
+      simple:
+        missing-queues-fatal: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 2000
+      template:
+        mandatory: false
 
+# Circuit breaker configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      customer-service:
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+      restaurantService:
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        register-health-indicator: true
+
+# Expose circuit breaker state via Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,circuitbreakers
+  health:
+    circuitbreakers:
+      enabled: true
 eureka:
   client:
     service-url:

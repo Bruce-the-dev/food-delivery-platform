@@ -1,16 +1,21 @@
 package com.fooddelivery.orderservice.service;
 
+import com.fooddelivery.orderservice.config.RabbitConfig;
 import com.fooddelivery.orderservice.dto.OrderItemRequest;
 import com.fooddelivery.orderservice.dto.OrderResponse;
 import com.fooddelivery.orderservice.dto.PlaceOrderRequest;
+import com.fooddelivery.orderservice.event.OrderPlacedEvent;
 import com.fooddelivery.orderservice.exception.ResourceNotFoundException;
+import com.fooddelivery.orderservice.fallback.CustomerClientFallback;
 import com.fooddelivery.orderservice.model.Order;
 import com.fooddelivery.orderservice.model.OrderItem;
 import com.fooddelivery.orderservice.repository.OrderRepository;
-import com.fooddelivery.orderservice.service.client.CustomerClient;
-import com.fooddelivery.orderservice.service.client.DeliveryClient;
-import com.fooddelivery.orderservice.service.client.RestaurantClient;
+import com.fooddelivery.orderservice.client.CustomerClient;
+import com.fooddelivery.orderservice.client.RestaurantClient;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,16 +28,19 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final CustomerClient customerClient;       // Feign client
     private final RestaurantClient restaurantClient;   // Feign client
-    private final DeliveryClient deliveryClient;
+
+    private final AmqpTemplate amqpTemplate;
 
 
 
     @Transactional
+
     public OrderResponse placeOrder(PlaceOrderRequest request) {
 
         // ---- Fetch restaurant snapshot ----
@@ -90,13 +98,34 @@ orderItem.setOrder(order);
 
         // ---- Save order ----
         Order savedOrder = orderRepository.save(order);
-        //calling delivery service
-        deliveryClient.assignDelivery(savedOrder.getId());
-
         // ---- TODO: publish OrderPlacedEvent for Delivery Service ----
+
+        // Create event object
+        OrderPlacedEvent event = OrderPlacedEvent.builder()
+                .orderId(savedOrder.getId())
+                .customerId(savedOrder.getCustomerId())
+                .customerName(savedOrder.getCustomerName())
+                .restaurantId(savedOrder.getRestaurantId())
+                .restaurantName(savedOrder.getRestaurantName())
+                .deliveryAddress(savedOrder.getDeliveryAddress())
+                .totalAmount(savedOrder.getTotalAmount())
+                .items(savedOrder.getItems().stream().map(i ->
+                        OrderPlacedEvent.OrderItemEvent.builder()
+                                .menuItemId(i.getMenuItemId())
+                                .itemName(i.getItemName())
+                                .quantity(i.getQuantity())
+                                .unitPrice(i.getUnitPrice())
+                                .build()
+                ).toList())
+                .build();
+
+        amqpTemplate.convertAndSend(RabbitConfig.ORDER_EXCHANGE, RabbitConfig.ORDER_PLACED_KEY, event);
+        log.info("OrderPlacedEvent published for order: {}", savedOrder.getId());
 
         return OrderResponse.fromEntity(savedOrder);
     }
+
+
 
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long orderId) {
@@ -141,8 +170,19 @@ orderItem.setOrder(order);
         }
 
         order.setStatus(Order.OrderStatus.CANCELLED);
+        Order saved = orderRepository.save(order);
+
+        OrderPlacedEvent.OrderCancelledEvent cancelEvent = OrderPlacedEvent.OrderCancelledEvent.builder()
+                .orderId(saved.getId())
+                .customerId(saved.getCustomerId())
+                .reason("Cancelled by customer")
+                .build();
+
+        amqpTemplate.convertAndSend(RabbitConfig.ORDER_EXCHANGE, RabbitConfig.ORDER_CANCELLED_KEY, cancelEvent);
+        log.info("OrderCancelledEvent published for order: {}", saved.getId());
+
+        return OrderResponse.fromEntity(saved);
         // Publish DeliveryCancelledEvent instead of synchronous call
-        return OrderResponse.fromEntity(orderRepository.save(order));
     }
 
     @Transactional

@@ -4,6 +4,22 @@ spring:
   application:
     name: delivery-service
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        missing-queues-fatal: false
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 2000d
+      template:
+        mandatory: false
+
+
   datasource:
     url: jdbc:postgresql://localhost:5432/delivery_db
     username: postgres

@@ -1,12 +1,16 @@
 package com.fooddelivery.deliveryservice.service;
 
+import com.fooddelivery.deliveryservice.config.RabbitConfig;
 import com.fooddelivery.deliveryservice.dto.DeliveryResponse;
+import com.fooddelivery.deliveryservice.event.DeliveryStatusUpdatedEvent;
 import com.fooddelivery.deliveryservice.exception.ResourceNotFoundException;
+import com.fooddelivery.deliveryservice.event.OrderPlacedEvent;
 import com.fooddelivery.deliveryservice.model.Delivery;
 import com.fooddelivery.deliveryservice.model.Delivery.DeliveryStatus;
 import com.fooddelivery.deliveryservice.repository.DeliveryRepository;
 import com.fooddelivery.deliveryservice.service.client.OrderClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -24,6 +28,7 @@ public class DeliveryService {
 
     private final DeliveryRepository deliveryRepository;
     private final OrderClient  orderClient;
+    private final AmqpTemplate amqpTemplate;
 
     // Simulated driver pool
     private static final String[] DRIVERS = {
@@ -39,22 +44,27 @@ public class DeliveryService {
      * Microservices only store orderId, pickupAddress, deliveryAddress.
      */
     @Transactional
-    public DeliveryResponse assignDelivery(Long orderId) {
+    public DeliveryResponse assignDelivery(OrderPlacedEvent event) {
         int driverIndex = (int) (Math.random() * DRIVERS.length);
 
         Delivery delivery = Delivery.builder()
-                .orderId(orderId)                 // only store orderId
+                .orderId(event.getOrderId())                 // only store orderId
                 .status(DeliveryStatus.ASSIGNED)
                 .driverName(DRIVERS[driverIndex])
                 .driverPhone(PHONES[driverIndex])
-                .pickupAddress("Restaurant address placeholder") // in microservice, could come from event
-                .deliveryAddress("Customer address placeholder") // in microservice, could come from event
+                .pickupAddress(event.getRestaurantName()) // in microservice, could come from event
+                .deliveryAddress(event.getDeliveryAddress()) // in microservice, could come from event
                 .assignedAt(LocalDateTime.now())
                 .build();
 
         deliveryRepository.save(delivery);
 
-        log.info("Delivery assigned to {} for order #{}", DRIVERS[driverIndex], orderId);
+        log.info("Delivery assigned to {} for order #{} — Customer: {}, Restaurant: {}",
+                DRIVERS[driverIndex],
+                event.getOrderId(),
+                event.getCustomerName(),
+                event.getRestaurantName());
+// TODO: Publish DeliveryAssignedEvent via RabbitMQ
         return DeliveryResponse.fromEntity(delivery);
     }
 
@@ -66,10 +76,11 @@ public class DeliveryService {
     }
 
     @Transactional(readOnly = true)
-    public DeliveryResponse getByOrderId(Long orderId) {
-        Delivery delivery = deliveryRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Delivery", "orderId", orderId));
-        return DeliveryResponse.fromEntity(delivery);
+    public List<DeliveryResponse> getByOrderId(Long orderId) {
+        List<Delivery> delivery = deliveryRepository.findByOrderId(orderId);
+        if (delivery.isEmpty()){
+                throw new ResourceNotFoundException("Delivery", "orderId", orderId);}
+        return delivery.stream().map(DeliveryResponse::fromEntity).toList();
     }
 
     @Transactional(readOnly = true)
@@ -93,10 +104,22 @@ public class DeliveryService {
             delivery.setPickedUpAt(LocalDateTime.now());
         } else if (newStatus == DeliveryStatus.DELIVERED) {
             delivery.setDeliveredAt(LocalDateTime.now());
-            orderClient.updateOrderStatus(delivery.getOrderId(), "DELIVERED");
         }
+        Delivery saved = deliveryRepository.save(delivery);
+        // Publish event instead of calling Order Service directly
+        DeliveryStatusUpdatedEvent event = DeliveryStatusUpdatedEvent.builder()
+                .deliveryId(saved.getId())
+                .orderId(saved.getOrderId())
+                .newStatus(newStatus.name())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        amqpTemplate.convertAndSend(
+                RabbitConfig.DELIVERY_EXCHANGE,
+                RabbitConfig.DELIVERY_STATUS_KEY,
+                event
+        );
+            log.info("DeliveryStatusUpdatedEvent published: order={} status={}", saved.getOrderId(), newStatus);
 
-        log.info("Delivery #{} status changed to {}", deliveryId, newStatus);
         return DeliveryResponse.fromEntity(deliveryRepository.save(delivery));
     }
 
@@ -109,4 +132,5 @@ public class DeliveryService {
 
         log.info("Delivery #{} cancelled", deliveryId);
     }
+
 }

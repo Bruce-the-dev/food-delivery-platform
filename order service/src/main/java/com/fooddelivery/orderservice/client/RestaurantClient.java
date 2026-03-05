@@ -1,5 +1,6 @@
-package com.fooddelivery.orderservice.service.client;
+package com.fooddelivery.orderservice.client;
 
+import com.fooddelivery.orderservice.fallback.RestaurantClientFallback;
 import lombok.Data;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 
-@FeignClient(name = "restaurant-service")
+@FeignClient(name = "restaurant-service", fallback = RestaurantClientFallback.class)
 public interface RestaurantClient {
 
     // Get restaurant info by ID

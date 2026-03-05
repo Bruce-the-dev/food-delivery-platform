@@ -1,6 +1,7 @@
 package com.fooddelivery.deliveryservice.controller;
 
 import com.fooddelivery.deliveryservice.dto.DeliveryResponse;
+import com.fooddelivery.deliveryservice.event.OrderPlacedEvent;
 import com.fooddelivery.deliveryservice.service.DeliveryService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +24,7 @@ public class DeliveryController {
     }
 
     @GetMapping("/order/{orderId}")
-    public ResponseEntity<DeliveryResponse> getByOrderId(@PathVariable Long orderId) {
+    public ResponseEntity<List<DeliveryResponse>> getByOrderId(@PathVariable Long orderId) {
         return ResponseEntity.ok(deliveryService.getByOrderId(orderId));
     }
 
@@ -40,9 +41,8 @@ public class DeliveryController {
         return ResponseEntity.ok(deliveryService.updateStatus(id, status));
     }
 
-    @PostMapping("/{orderId}/assign")
-    public ResponseEntity<DeliveryResponse> assignDelivery(@PathVariable Long orderId) {
-        // In microservices, assignDelivery only needs the orderId
-        return ResponseEntity.ok(deliveryService.assignDelivery(orderId));
+    @PostMapping("/assign")
+    public ResponseEntity<DeliveryResponse> assignDelivery(@RequestBody OrderPlacedEvent event) {
+        return ResponseEntity.ok(deliveryService.assignDelivery(event));
     }
 }

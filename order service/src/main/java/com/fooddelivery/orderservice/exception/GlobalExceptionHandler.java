@@ -1,5 +1,6 @@
 package com.fooddelivery.orderservice.exception;
 
+import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -46,7 +47,19 @@ public class GlobalExceptionHandler {
         body.put("errors", errors);
         return ResponseEntity.badRequest().body(body);
     }
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleServiceUnavailable(ServiceUnavailableException ex) {
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
+    }
 
+//    @ExceptionHandler(FeignException.class)
+//    public ResponseEntity<Map<String, Object>> handleFeignException(FeignException ex) {
+//        if (ex.status() == 503 || ex.status() == -1) {
+//            return buildResponse(HttpStatus.SERVICE_UNAVAILABLE,
+//                    "A dependent service is currently unavailable. Please try again later.");
+//        }
+//        return buildResponse(HttpStatus.BAD_GATEWAY, ex.getMessage());
+//    }
     private ResponseEntity<Map<String, Object>> buildResponse(HttpStatus status, String message) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
