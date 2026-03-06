@@ -1,3 +1,54 @@
+server:
+  port: 8080
+
 spring:
   application:
-    name: API gateway
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webmvc:
+          enabled: true
+          routes:
+            - id: customer-service
+              uri: lb://customer-service
+              predicates:
+                - Path=/api/customers/**
+
+            - id: restaurant-service
+              uri: lb://restaurant-service
+              predicates:
+                - Path=/api/restaurants/**
+
+            - id: order-service
+              uri: lb://order-service
+              predicates:
+                - Path=/api/orders/**
+
+            - id: delivery-service
+              uri: lb://delivery-service
+              predicates:
+                - Path=/api/deliveries/**
+app:
+  jwt:
+    secret: myMonolithSecretKeyThatShouldBeExternalizedInMicroservices2024FoodDelivery!
+    expiration-ms: 86400000
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,gateway
+  endpoint:
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
