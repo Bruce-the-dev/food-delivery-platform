@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.math.BigDecimal;
 
-@FeignClient(name = "restaurant-service", fallback = RestaurantClientFallback.class)
+@FeignClient(name = "restaurant-service", fallbackFactory = RestaurantClientFallback.class)
 public interface RestaurantClient {
 
     // Get restaurant info by ID

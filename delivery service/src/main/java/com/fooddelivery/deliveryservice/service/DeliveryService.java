@@ -8,7 +8,7 @@ import com.fooddelivery.deliveryservice.event.OrderPlacedEvent;
 import com.fooddelivery.deliveryservice.model.Delivery;
 import com.fooddelivery.deliveryservice.model.Delivery.DeliveryStatus;
 import com.fooddelivery.deliveryservice.repository.DeliveryRepository;
-import com.fooddelivery.deliveryservice.service.client.OrderClient;
+//import com.fooddelivery.deliveryservice.service.client.OrderClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ public class DeliveryService {
     private static final Logger log = LoggerFactory.getLogger(DeliveryService.class);
 
     private final DeliveryRepository deliveryRepository;
-    private final OrderClient  orderClient;
+//    private final OrderClient orderClient;
     private final AmqpTemplate amqpTemplate;
 
     // Simulated driver pool

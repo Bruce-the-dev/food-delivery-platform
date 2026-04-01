@@ -19,8 +19,6 @@ public class RestaurantResponse {
 
     // MONOLITH: owner info embedded via direct entity traversal
     private Long ownerId;
-    private String ownerName;
-
     public static RestaurantResponse fromEntity(Restaurant r) {
         RestaurantResponse dto = new RestaurantResponse();
         dto.setId(r.getId());

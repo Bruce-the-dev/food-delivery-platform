@@ -13,6 +13,6 @@ public class PlaceOrderRequest {
     private String deliveryAddress;  // optional override of customer's default address
     private String specialInstructions;
     private Long customerId;
-    public String customerName;
+//    public String customerName;
 
 }

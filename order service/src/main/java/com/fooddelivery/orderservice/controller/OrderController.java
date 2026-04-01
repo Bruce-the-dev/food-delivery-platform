@@ -2,7 +2,6 @@ package com.fooddelivery.orderservice.controller;
 
 import com.fooddelivery.orderservice.dto.OrderResponse;
 import com.fooddelivery.orderservice.dto.PlaceOrderRequest;
-import com.fooddelivery.orderservice.model.Order;
 import com.fooddelivery.orderservice.service.OrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

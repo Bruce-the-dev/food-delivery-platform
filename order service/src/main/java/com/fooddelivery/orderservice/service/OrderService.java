@@ -6,13 +6,11 @@ import com.fooddelivery.orderservice.dto.OrderResponse;
 import com.fooddelivery.orderservice.dto.PlaceOrderRequest;
 import com.fooddelivery.orderservice.event.OrderPlacedEvent;
 import com.fooddelivery.orderservice.exception.ResourceNotFoundException;
-import com.fooddelivery.orderservice.fallback.CustomerClientFallback;
 import com.fooddelivery.orderservice.model.Order;
 import com.fooddelivery.orderservice.model.OrderItem;
 import com.fooddelivery.orderservice.repository.OrderRepository;
 import com.fooddelivery.orderservice.client.CustomerClient;
 import com.fooddelivery.orderservice.client.RestaurantClient;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -40,7 +38,6 @@ public class OrderService {
 
 
     @Transactional
-
     public OrderResponse placeOrder(PlaceOrderRequest request) {
 
         // ---- Fetch restaurant snapshot ----
@@ -48,6 +45,7 @@ public class OrderService {
         if (!restaurantDTO.isActive()) {
             throw new IllegalStateException("Restaurant is not accepting orders");
         }
+        log.info("Restaurant found: {}", restaurantDTO);
 
         // ---- Build order entity with IDs + snapshots ----
         CustomerClient.CustomerResponseDto customer =
@@ -124,8 +122,6 @@ orderItem.setOrder(order);
 
         return OrderResponse.fromEntity(savedOrder);
     }
-
-
 
     @Transactional(readOnly = true)
     public OrderResponse getOrderById(Long orderId) {
