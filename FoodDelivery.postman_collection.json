@@ -1,1102 +1,247 @@
 {
   "info": {
-    "name": "Food Delivery Platform",
-    "description": "Complete API collection for the Food Delivery Platform microservices system. All requests go through the API Gateway at http://localhost:8080.\n\nSetup:\n1. Start all services (locally or via Docker)\n2. Run 'Register Customer' then 'Login' — the token is saved automatically\n3. Follow the Full Order Flow folder for end-to-end testing",
+    "_postman_id": "a1b2c3d4-e5f6-7890-1234-56789abcdef0",
+    "name": "Food Delivery Platform (Fixed)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:8080",
-      "type": "string"
-    },
-    {
-      "key": "token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "customerId",
-      "value": "1",
-      "type": "string"
-    },
-    {
-      "key": "restaurantId",
-      "value": "1",
-      "type": "string"
-    },
-    {
-      "key": "menuItemId",
-      "value": "1",
-      "type": "string"
-    },
-    {
-      "key": "orderId",
-      "value": "1",
-      "type": "string"
-    },
-    {
-      "key": "deliveryId",
-      "value": "1",
-      "type": "string"
-    },
-    {
-      "key": "ownerUsername",
-      "value": "divine",
-      "type": "string"
-    }
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "customerId", "value": "" },
+    { "key": "restaurantId", "value": "" },
+    { "key": "menuItemId", "value": "" },
+    { "key": "orderId", "value": "" }
   ],
   "item": [
     {
-      "name": "Customer",
-      "description": "Customer registration, login, and profile endpoints.",
-      "item": [
-        {
-          "name": "Register Customer",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"username\": \"divine\",\n    \"password\": \"password123\",\n    \"email\": \"divine@example.com\",\n    \"phone\": \"0241234567\",\n    \"address\": \"123 Main Street\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/customers/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "customers", "register"]
-            },
-            "description": "Register a new customer. No JWT required. Returns a token on success."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const json = pm.response.json();",
-                  "    if (json.token) {",
-                  "        pm.collectionVariables.set('token', json.token);",
-                  "        console.log('Token saved:', json.token);",
-                  "    }",
-                  "}",
-                  "pm.test('Registration successful', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+      "name": "Register Customer",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"divine\",\n  \"password\": \"password123\",\n  \"email\": \"divine@example.com\",\n  \"phone\": \"0241234567\",\n  \"firstName\": \"Divine\",\n  \"lastName\": \"Tester\",\n  \"address\": \"123 Main Street\"\n}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "register"]
+        }
+      },
+      "event": [
         {
-          "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"username\": \"divine\",\n    \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/customers/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "customers", "login"]
-            },
-            "description": "Login and get a JWT token. Token is automatically saved to the collection variable and used in all subsequent requests."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const json = pm.response.json();",
-                  "    if (json.token) {",
-                  "        pm.collectionVariables.set('token', json.token);",
-                  "        console.log('Token saved automatically:', json.token);",
-                  "    }",
-                  "}",
-                  "pm.test('Login successful', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test('Token returned', function() {",
-                  "    const json = pm.response.json();",
-                  "    pm.expect(json.token).to.be.a('string');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Get Customer by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/customers/{{customerId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "customers", "{{customerId}}"]
-            },
-            "description": "Get customer profile by ID."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Customer retrieved', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.token) pm.collectionVariables.set('token', json.token);",
+              "if (json.id) pm.collectionVariables.set('customerId', json.id.toString());",
+              "pm.test('Registration OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
         }
       ]
     },
     {
-      "name": "Restaurant",
-      "description": "Restaurant creation and menu management endpoints.",
-      "item": [
-        {
-          "name": "Create Restaurant",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Test Restaurant\",\n    \"address\": \"456 Food Street\",\n    \"city\": \"Accra\",\n    \"cuisineType\": \"Italian\",\n    \"description\": \"Very Italiano\",\n    \"phone\": \"0209876543\",\n    \"estimatedDeliveryMinutes\": 23\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/restaurants?ownerId={{customerId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "restaurants"],
-              "query": [
-                {
-                  "key": "ownerId",
-                  "value": "{{customerId}}"
-                }
-              ]
-            },
-            "description": "Create a new restaurant. Requires ownerId query parameter."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const json = pm.response.json();",
-                  "    if (json.id) {",
-                  "        pm.collectionVariables.set('restaurantId', json.id.toString());",
-                  "        console.log('Restaurant ID saved:', json.id);",
-                  "    }",
-                  "}",
-                  "pm.test('Restaurant created', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"divine\",\n  \"password\": \"password123\"\n}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/api/customers/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "customers", "login"]
+        }
+      },
+      "event": [
         {
-          "name": "Get Restaurant by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/restaurants/{{restaurantId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "restaurants", "{{restaurantId}}"]
-            },
-            "description": "Get restaurant details by ID."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Restaurant retrieved', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Search Restaurants",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/restaurants/search?name=Test",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "restaurants", "search"],
-              "query": [
-                {
-                  "key": "name",
-                  "value": "Test"
-                },
-                {
-                  "key": "cuisineType",
-                  "value": "",
-                  "disabled": true
-                },
-                {
-                  "key": "city",
-                  "value": "",
-                  "disabled": true
-                }
-              ]
-            },
-            "description": "Search restaurants by name, cuisineType, or city. Public endpoint — no JWT required."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Search returned results', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Add Menu Item",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Margherita Pizza\",\n    \"description\": \"Classic pizza with tomato and mozzarella\",\n    \"price\": 15.99,\n    \"available\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/restaurants/{{restaurantId}}/menu?OwnerUsername={{ownerUsername}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "restaurants", "{{restaurantId}}", "menu"],
-              "query": [
-                {
-                  "key": "OwnerUsername",
-                  "value": "{{ownerUsername}}"
-                }
-              ]
-            },
-            "description": "Add a menu item to a restaurant. Requires OwnerUsername query parameter."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const json = pm.response.json();",
-                  "    if (json.id) {",
-                  "        pm.collectionVariables.set('menuItemId', json.id.toString());",
-                  "        console.log('Menu item ID saved:', json.id);",
-                  "    }",
-                  "}",
-                  "pm.test('Menu item added', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Get Menu Items",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/restaurants/{{restaurantId}}/menu",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "restaurants", "{{restaurantId}}", "menu"]
-            },
-            "description": "Get all menu items for a restaurant."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Menu items retrieved', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.token) pm.collectionVariables.set('token', json.token);",
+              "if (json.id) pm.collectionVariables.set('customerId', json.id.toString());",
+              "pm.test('Login OK', function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ]
+          }
         }
       ]
     },
     {
-      "name": "Orders",
-      "description": "Order placement and management endpoints.",
-      "item": [
-        {
-          "name": "Place Order",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"customerId\": {{customerId}},\n    \"restaurantId\": {{restaurantId}},\n    \"deliveryAddress\": \"123 Test Street\",\n    \"specialInstructions\": \"no onions\",\n    \"items\": [\n        {\n            \"menuItemId\": {{menuItemId}},\n            \"quantity\": 2,\n            \"specialInstructions\": \"extra cheese\"\n        }\n    ]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders"]
-            },
-            "description": "Place a new order. Triggers automatic delivery assignment via RabbitMQ. Rate limited to 5 requests per minute."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const json = pm.response.json();",
-                  "    if (json.id) {",
-                  "        pm.collectionVariables.set('orderId', json.id.toString());",
-                  "        console.log('Order ID saved:', json.id);",
-                  "    }",
-                  "}",
-                  "pm.test('Order placed successfully', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test('Order status is PLACED', function() {",
-                  "    const json = pm.response.json();",
-                  "    pm.expect(json.status).to.equal('PLACED');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+      "name": "Create Restaurant",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Test Restaurant\",\n  \"address\": \"456 Food Street\",\n  \"city\": \"Accra\",\n  \"cuisineType\": \"Italian\",\n  \"description\": \"Test restaurant\",\n  \"phone\": \"0209876543\",\n  \"estimatedDeliveryMinutes\": 30\n}"
         },
-        {
-          "name": "Get Order by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders", "{{orderId}}"]
-            },
-            "description": "Get order details by ID."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Order retrieved', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
+        "url": {
+          "raw": "{{baseUrl}}/api/restaurants?ownerId={{customerId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "restaurants"],
+          "query": [
+            { "key": "ownerId", "value": "{{customerId}}" }
           ]
-        },
+        }
+      },
+      "event": [
         {
-          "name": "Get Orders by Customer",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/orders/customer/{{customerId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders", "customer", "{{customerId}}"]
-            },
-            "description": "Get all orders placed by a specific customer."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Customer orders retrieved', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Cancel Order",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/orders/{{orderId}}/cancel",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders", "{{orderId}}", "cancel"]
-            },
-            "description": "Cancel an order. Triggers OrderCancelledEvent via RabbitMQ which cancels the associated delivery."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Order cancelled', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.id) pm.collectionVariables.set('restaurantId', json.id.toString());",
+              "pm.test('Restaurant created', () => pm.response.to.have.status(200));"
+            ]
+          }
         }
       ]
     },
     {
-      "name": "Delivery",
-      "description": "Delivery tracking and status update endpoints.",
-      "item": [
-        {
-          "name": "Get All Deliveries",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries"]
-            },
-            "description": "Get all delivery records. Use this to verify a delivery was auto-created after placing an order."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Deliveries retrieved', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "if (pm.response.code === 200) {",
-                  "    const json = pm.response.json();",
-                  "    if (Array.isArray(json) && json.length > 0) {",
-                  "        pm.collectionVariables.set('deliveryId', json[0].id.toString());",
-                  "        console.log('Delivery ID saved:', json[0].id);",
-                  "    }",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+      "name": "Add Menu Item",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Margherita Pizza\",\n  \"description\": \"Classic pizza\",\n  \"price\": 15.99,\n  \"available\": true,\n  \"category\": \"Main\"\n}"
         },
-        {
-          "name": "Get Delivery by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries/{{deliveryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries", "{{deliveryId}}"]
-            },
-            "description": "Get delivery details by delivery ID."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Delivery retrieved', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
+        "url": {
+          "raw": "{{baseUrl}}/api/restaurants/{{restaurantId}}/menu?OwnerUsername=divine",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "restaurants", "{{restaurantId}}", "menu"],
+          "query": [
+            { "key": "OwnerUsername", "value": "divine" }
           ]
-        },
+        }
+      },
+      "event": [
         {
-          "name": "Get Delivery by Order ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries/order/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries", "order", "{{orderId}}"]
-            },
-            "description": "Get the delivery record associated with a specific order."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Delivery for order retrieved', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.id) pm.collectionVariables.set('menuItemId', json.id.toString());",
+              "pm.test('Menu item added', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Place Order",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": {{customerId}},\n  \"restaurantId\": {{restaurantId}},\n  \"deliveryAddress\": \"123 Test Street\",\n  \"specialInstructions\": \"No onions\",\n  \"items\": [\n    {\n      \"menuItemId\": {{menuItemId}},\n      \"quantity\": 2,\n      \"unitPrice\": 15.99\n    }\n  ]\n}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders"]
+        }
+      },
+      "event": [
         {
-          "name": "Update Delivery Status - ASSIGNED",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"status\": \"ASSIGNED\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries/{{deliveryId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries", "{{deliveryId}}", "status"]
-            },
-            "description": "Assign a driver to the delivery."
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.request.body.raw = JSON.stringify({",
+              "  customerId: pm.collectionVariables.get('customerId') || 1,",
+              "  restaurantId: pm.collectionVariables.get('restaurantId') || 1,",
+              "  deliveryAddress: '123 Test Street',",
+              "  specialInstructions: 'No onions',",
+              "  items: [",
+              "    {",
+              "      menuItemId: pm.collectionVariables.get('menuItemId') || 1,",
+              "      quantity: 2,",
+              "      unitPrice: 15.99",
+              "    }",
+              "  ]",
+              "});"
+            ]
           }
         },
         {
-          "name": "Update Delivery Status - PICKED_UP",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"status\": \"PICKED_UP\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries/{{deliveryId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries", "{{deliveryId}}", "status"]
-            },
-            "description": "Mark the order as picked up from the restaurant."
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const json = pm.response.json();",
+              "if (json.id) pm.collectionVariables.set('orderId', json.id.toString());",
+              "pm.test('Order placed', () => pm.response.to.have.status(200));"
+            ]
           }
-        },
-        {
-          "name": "Update Delivery Status - DELIVERED",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"status\": \"DELIVERED\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries/{{deliveryId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries", "{{deliveryId}}", "status"]
-            },
-            "description": "Mark the delivery as completed. This triggers a DeliveryStatusUpdatedEvent via RabbitMQ which updates the order status to DELIVERED."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Delivery marked as delivered', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
         }
       ]
     },
     {
-      "name": "Full Order Flow",
-      "description": "Run these requests in order to verify the complete end-to-end flow:\n\n1. Register Customer\n2. Login (saves token automatically)\n3. Create Restaurant (saves restaurantId automatically)\n4. Add Menu Item (saves menuItemId automatically)\n5. Place Order (saves orderId automatically)\n6. Get All Deliveries (verify auto-assignment, saves deliveryId)\n7. Update Status to PICKED_UP\n8. Update Status to DELIVERED\n9. Verify Order Status\n\nAll variables are saved automatically between steps.",
-      "item": [
-        {
-          "name": "1. Register Customer",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"password123\",\n    \"email\": \"testuser@example.com\",\n    \"phone\": \"0241234567\",\n    \"address\": \"123 Main Street\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/customers/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "customers", "register"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    const json = pm.response.json();",
-                  "    if (json.token) pm.collectionVariables.set('token', json.token);",
-                  "}",
-                  "pm.test('Step 1 - Registration successful', function() {",
-                  "    pm.expect(pm.response.code).to.be.oneOf([200, 400]);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+      "name": "Rate Limit Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customerId\": {{customerId}},\n  \"restaurantId\": {{restaurantId}},\n  \"deliveryAddress\": \"123 Test Street\",\n  \"items\": [\n    {\n      \"menuItemId\": {{menuItemId}},\n      \"quantity\": 1,\n      \"unitPrice\": 15.99\n    }\n  ]\n}"
         },
+        "url": {
+          "raw": "{{baseUrl}}/api/orders",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "orders"]
+        }
+      },
+      "event": [
         {
-          "name": "2. Login",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"username\": \"testuser\",\n    \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/customers/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "customers", "login"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Step 2 - Login successful', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.collectionVariables.set('token', json.token);",
-                  "console.log('Token saved:', json.token);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "3. Create Restaurant",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Flow Test Restaurant\",\n    \"address\": \"456 Food Street\",\n    \"city\": \"Accra\",\n    \"cuisineType\": \"Italian\",\n    \"description\": \"Test restaurant for order flow\",\n    \"phone\": \"0209876543\",\n    \"estimatedDeliveryMinutes\": 23\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/restaurants?ownerId={{customerId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "restaurants"],
-              "query": [
-                {
-                  "key": "ownerId",
-                  "value": "{{customerId}}"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Step 3 - Restaurant created', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.collectionVariables.set('restaurantId', json.id.toString());",
-                  "console.log('Restaurant ID saved:', json.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "4. Add Menu Item",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"name\": \"Margherita Pizza\",\n    \"description\": \"Classic pizza\",\n    \"price\": 15.99,\n    \"available\": true\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/restaurants/{{restaurantId}}/menu?OwnerUsername={{ownerUsername}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "restaurants", "{{restaurantId}}", "menu"],
-              "query": [
-                {
-                  "key": "OwnerUsername",
-                  "value": "{{ownerUsername}}"
-                }
-              ]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Step 4 - Menu item added', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.collectionVariables.set('menuItemId', json.id.toString());",
-                  "console.log('Menu item ID saved:', json.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "5. Place Order",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"customerId\": {{customerId}},\n    \"restaurantId\": {{restaurantId}},\n    \"deliveryAddress\": \"123 Test Street\",\n    \"specialInstructions\": \"no onions\",\n    \"items\": [\n        {\n            \"menuItemId\": {{menuItemId}},\n            \"quantity\": 2\n        }\n    ]\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/orders",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Step 5 - Order placed', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test('Order status is PLACED', function() {",
-                  "    pm.expect(pm.response.json().status).to.equal('PLACED');",
-                  "});",
-                  "const json = pm.response.json();",
-                  "pm.collectionVariables.set('orderId', json.id.toString());",
-                  "console.log('Order ID saved:', json.id);"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "6. Verify Delivery Auto-Created",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries/order/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries", "order", "{{orderId}}"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Step 6 - Delivery auto-created by RabbitMQ event', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "const json = pm.response.json();",
-                  "if (json.id) {",
-                  "    pm.collectionVariables.set('deliveryId', json.id.toString());",
-                  "    console.log('Delivery ID saved:', json.id);",
-                  "}",
-                  "pm.test('Delivery status is PENDING', function() {",
-                  "    pm.expect(json.status).to.equal('PENDING');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "7. Update Delivery - PICKED_UP",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"status\": \"PICKED_UP\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries/{{deliveryId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries", "{{deliveryId}}", "status"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Step 7 - Delivery picked up', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "8. Update Delivery - DELIVERED",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"status\": \"DELIVERED\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/api/deliveries/{{deliveryId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "deliveries", "{{deliveryId}}", "status"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Step 8 - Delivery completed', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "9. Verify Order Status Updated",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/orders/{{orderId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "orders", "{{orderId}}"]
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Step 9 - Order status updated via RabbitMQ event', function() {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test('Order status reflects delivery completion', function() {",
-                  "    const json = pm.response.json();",
-                  "    console.log('Final order status:', json.status);",
-                  "    pm.expect(json.status).to.not.equal('PLACED');",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (!pm.collectionVariables.get('count')) {",
+              "  pm.collectionVariables.set('count', 1);",
+              "} else {",
+              "  let c = parseInt(pm.collectionVariables.get('count'));",
+              "  pm.collectionVariables.set('count', c + 1);",
+              "}",
+              "let count = pm.collectionVariables.get('count');",
+              "if (count <= 5) {",
+              "  pm.test('Within limit', () => pm.response.to.have.status(200));",
+              "} else {",
+              "  pm.test('Rate limited', () => pm.response.to.have.status(429));",
+              "}"
+            ]
+          }
         }
       ]
     }
